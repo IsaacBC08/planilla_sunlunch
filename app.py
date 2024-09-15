@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, url_for, redirect, flash, send_file
 from flask_mysqldb import MySQL
+from flask_socketio import SocketIO
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, time
@@ -22,7 +23,7 @@ app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT', 3306))
 
 app.config['MYSQL_SSL_CA'] = os.getenv('MYSQL_SSL_CA_PATH')
 mysql = MySQL(app)
-
+socketio = SocketIO(app)
 # Ruta index
 @app.route('/admin')
 def index():
@@ -187,4 +188,4 @@ def reporte_asistencia():
     return send_file(buffer, as_attachment=True, download_name="reporte_asistencia_sunlunch.pdf", mimetype='application/pdf')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000)
+    port = int(os.getenv('PORT', 8000))
