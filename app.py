@@ -4,12 +4,14 @@ from flask_socketio import SocketIO
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, time
+import pytz 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
+
 app = Flask(__name__)
 load_dotenv()
 
@@ -20,10 +22,13 @@ app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT', 3306))
-
 app.config['MYSQL_SSL_CA'] = os.getenv('MYSQL_SSL_CA_PATH')
 mysql = MySQL(app)
 socketio = SocketIO(app)
+
+# Definir la zona horaria UTC-6
+timezone = pytz.timezone('America/Mexico_City')
+
 # Ruta index
 @app.route('/admin')
 def index():
@@ -74,9 +79,9 @@ def asistencia():
             if empleado:
                 id_empleado, nombre_empleado = empleado
 
-                # Registrar la asistencia con la fecha y hora actuales
-                fecha_actual = datetime.now().date()
-                hora_actual = datetime.now().time()
+                # Registrar la asistencia con la fecha y hora actuales ajustadas a UTC-6
+                fecha_actual = datetime.now(timezone).date()
+                hora_actual = datetime.now(timezone).time()
 
                 cursor.execute("INSERT INTO asistencias (id_empleado, fecha, hora) VALUES (%s, %s, %s)",
                                (id_empleado, fecha_actual, hora_actual))
@@ -99,7 +104,7 @@ def asistencia():
 @app.route('/reporte_asistencia')
 def reporte_asistencia():    
     # Obtener la fecha de inicio y fin de la semana
-    today = datetime.now().date()
+    today = datetime.now(timezone).date()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
